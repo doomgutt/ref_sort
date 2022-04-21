@@ -1,10 +1,47 @@
+from pathlib import Path
+
+ROOT_DIR = Path('.')
+
 def main():
     file_dir = 'src_test_and_extras/test_pile/'
     file_name = 'Mediano 2021'
     output_dir = '/home/doomgutt/.obsidian/new_ref_dump/'
 
-    refs = extract_refs(file_dir + file_name)
-    write_refs(refs, output_dir)
+    # refs = extract_refs(file_dir + file_name)
+    # write_refs(refs, output_dir)
+
+    ref_sort()
+
+
+def ref_sort():
+    bib_dir = ROOT_DIR / 'bibs'
+    for file in bib_dir.glob('*.bib'):
+        identify_entries(file)
+
+
+
+def identify_entries(file):
+    entries = []
+    with file.open() as f:
+        entry_lines = find_at(f)
+        print(entry_lines)
+        # for line in f:
+        #     if line[0] == '@':
+        #         entries.append([])
+        #         bracket_counter = 0
+        #         entries[-1].append(line)
+
+
+            # print(line, end='')
+            # f.readline()
+
+def find_at(opened_file):
+    entry_lines = []
+    for n, line in enumerate(opened_file):
+        if line[0] == "@":
+            entry_lines.append(n)
+    return entry_lines
+
 
 
 def extract_refs(ref_file):
