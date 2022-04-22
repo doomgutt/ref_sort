@@ -7,41 +7,129 @@ def main():
     file_name = 'Mediano 2021'
     output_dir = '/home/doomgutt/.obsidian/new_ref_dump/'
 
-    # refs = extract_refs(file_dir + file_name)
-    # write_refs(refs, output_dir)
-
     ref_sort()
 
-
+# ----------------------------------------------------------
 def ref_sort():
+    """ asdf"""
     bib_dir = ROOT_DIR / 'bibs'
-    for file in bib_dir.glob('*.bib'):
-        identify_entries(file)
+    output_dir = ROOT_DIR / 'output'
+    bib_files = []
+    for bib_file in bib_dir.glob('*.bib'):
+        entries = bib_entries(bib_file)
+
+        # testing
+        print(entries[0]['filename'])
+
+# writing entries ------------------------------------------
+def testing_writing(entries, output_dir):
+    for entry in entries:
+        with entry['filename'].open() as f:
+            for x in f:
+                x = 'aaa'
 
 
 
-def identify_entries(file):
+
+# getting entries ------------------------------------------
+def bib_entries(bib_file):
+    """returns a list of dictionary bib entries"""
     entries = []
-    with file.open() as f:
-        entry_lines = find_at(f)
-        print(entry_lines)
-        # for line in f:
-        #     if line[0] == '@':
-        #         entries.append([])
-        #         bracket_counter = 0
-        #         entries[-1].append(line)
+    with bib_file.open() as f:
+        f_lines = f.readlines()
+        for line_n in find_entries(f_lines):
+            dict_entry = entry_to_dict(determine_entry(f_lines, line_n))
+            dict_entry['filename'] = make_filename(dict_entry)
+            entries.append(dict_entry)
+    return entries
+
+# organising entries ---------------------------------------
+def entry_to_dict(entry):
+    """turns the list of strings into a dictionary"""
+    entry_dict = {
+        'filename'  : '',
+        'id'        : '',
+        'type'      : '',
+        'title'     : '',
+        'author'    : '',
+        'date'      : '',
+        'publisher' : '',
+        'self'      : False}
+    for line in entry:
+        checkline = line.replace(' ', '').lower()
+        if checkline[0] == '@':
+            br = line.find('{')
+            entry_dict['type'] = line[1:br]
+            entry_dict['id'] = line[br+1:-2]
+        if 'title=' in checkline:
+            entry_dict['title'] = get_brackets(line)
+        if 'author=' in checkline:
+            author_string = get_brackets(line).split(' and ')
+            entry_dict['author'] = author_string
+        if any(x in checkline for x in ['date=', 'year=']):
+            entry_dict['date'] = get_brackets(line)
+        if any(x in checkline for x in ['publisher=', 'journal=']):
+            entry_dict['publisher'] = get_brackets(line)
+        if 'self=true' in checkline:
+            entry_dict['self'] = True
+
+    return entry_dict
+
+def get_brackets(line):
+    """returns only the string within curly bracers"""
+    bounds = [1, 0]
+    bounds[0] += line.find('{')
+    bounds[1] += line.find('}')
+    return line[bounds[0]:bounds[1]]
+
+def make_filename(entry):
+    """ make filename in format 'author (date) - title'"""
+    
+    # author
+    et_al = ''
+    authors = entry['author']
+    if len(authors) == 0 or authors[0] == '':
+        authors = ['???, ???']
+    elif len(authors) > 1:
+        et_al = 'et al. '    
+    
+    # get last name of first author
+    author = authors[0].split()[0].replace(',', '') + ' ' + et_al
+
+    # title and date
+    title = entry['title'].replace(':', ',')
+    date = f"({entry['date']}) - "
+
+    filename = author + date + title + '.md'
+    return filename
 
 
-            # print(line, end='')
-            # f.readline()
+# finding entries ------------------------------------------
+def determine_entry(lines, line_n):
+    """uses @ and {} to determine and return a bib entry"""
+    bracket_counter = 0
+    temp = []
+    for i in range(1000):
+        line = lines[line_n+i].strip('\n')
+        temp.append(line)
+        bracket_counter += line.count('{') - line.count('}')
+        if bracket_counter == 0:
+            return temp
+    
+    print('mismatched brackets')
+    return None
 
-def find_at(opened_file):
+def find_entries(lines):
+    """finds bib entries using @"""
     entry_lines = []
-    for n, line in enumerate(opened_file):
+    for n, line in enumerate(lines):
         if line[0] == "@":
             entry_lines.append(n)
     return entry_lines
 
+
+
+# ==============================
 
 
 def extract_refs(ref_file):
