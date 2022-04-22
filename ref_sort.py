@@ -17,17 +17,43 @@ def ref_sort():
     bib_files = []
     for bib_file in bib_dir.glob('*.bib'):
         entries = bib_entries(bib_file)
+        make_md_refs(entries, output_dir)
 
-        # testing
-        print(entries[0]['filename'])
 
 # writing entries ------------------------------------------
-def testing_writing(entries, output_dir):
+def make_md_refs(entries, output_dir):
     for entry in entries:
-        with entry['filename'].open() as f:
-            for x in f:
-                x = 'aaa'
+        filepath = output_dir / entry['filename']
 
+        # if there is a file, look for 
+        if filepath.exists() and filepath.is_file():
+            with filepath.open('r') as f:
+                lines = f.readlines()
+                check_ref_data(lines)
+        else:
+            pass
+        # make new file if no file
+        
+        
+        break
+
+
+def check_ref_data(lines):
+    """Checks whether the file has a 'metadata' section"""
+
+    # find metadata
+    metadata_line = None
+    for n, line in enumerate(lines):
+        if line.lower().replace(' ', '') == '###metadata':
+            metadata_line = n
+
+            print('yes metadata')
+            break
+    
+    if metadata_line:
+        for line in lines[n:]:
+            print(line)
+            pass
 
 
 
