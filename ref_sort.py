@@ -3,6 +3,7 @@ from pathlib import Path
 ROOT_DIR = Path('.')
 REF_SORT_TAG = '#---ref-sort---------------------'
 # === === === === ===
+CUSTOM_OUTPUT = Path('/home/doomgutt/.obsidian/Personal/phd/texts/')
 
 
 
@@ -13,7 +14,8 @@ def main():
 def ref_sort():
     """ref_sort"""
     bib_dir = ROOT_DIR / 'bibs'
-    output_dir = ROOT_DIR / 'output'
+    output_dir = CUSTOM_OUTPUT
+    # output_dir = ROOT_DIR / 'output'
     for bib_file in bib_dir.glob('*.bib'):
         entries = bib_entries(bib_file)
         make_ref_files(entries, output_dir)
