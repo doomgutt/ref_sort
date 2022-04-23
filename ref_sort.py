@@ -1,12 +1,12 @@
 from pathlib import Path
+from tkinter import N, Y
 
 ROOT_DIR = Path('.')
+REF_SORT_TAG = '#---ref-sort---------------------'
+#
+
 
 def main():
-    file_dir = 'src_test_and_extras/test_pile/'
-    file_name = 'Mediano 2021'
-    output_dir = '/home/doomgutt/.obsidian/new_ref_dump/'
-
     ref_sort()
 
 # ----------------------------------------------------------
@@ -14,49 +14,88 @@ def ref_sort():
     """ asdf"""
     bib_dir = ROOT_DIR / 'bibs'
     output_dir = ROOT_DIR / 'output'
-    bib_files = []
     for bib_file in bib_dir.glob('*.bib'):
         entries = bib_entries(bib_file)
-        make_md_refs(entries, output_dir)
+        make_ref_files(entries, output_dir)
 
 
 # writing entries ------------------------------------------
-def make_md_refs(entries, output_dir):
+def make_ref_files(entries, output_dir):
     for entry in entries:
-        filepath = output_dir / entry['filename']
+        fname = entry['filename'] + '.md'
+        filepath = output_dir / fname
 
-        # if there is a file, look for 
+        # if self=true make bilbiography
+        bibliography = None
+        if entry['self']:
+            bibliography = make_bibliography(entries)
+
+        # if there is a file, look for it
         if filepath.exists() and filepath.is_file():
-            with filepath.open('r') as f:
-                lines = f.readlines()
-                check_ref_data(lines)
-        else:
-            pass
+            with filepath.open('r+') as f:
+                print(f.tell())
+                
+                # check if ref_sort already altered the file
+                lines, pos = check_ref_sort(f)
+                print(pos)
+                if pos == None:
+                    f.seek(0, 2)
+                    new_lines = write_ref(lines, entry, bibliography)
+                    f.write(new_lines)
+                    f.truncate()
+                else:
+                    # ask permission to rewrite
+                    answer = input(f"Rewrite ref_sort data for: \n{entry['filename']}?\n y/n? ")
+                    if answer.lower() in ["y","yes"]:
+                        new_lines = write_ref(lines, entry, bibliography)
+                        f.seek(pos)
+                        f.write(new_lines)
+                        f.truncate()
         # make new file if no file
-        
-        
-        break
+        else:
+            with filepath.open('w') as f:
+                new_lines = write_ref(lines, entry, bibliography)
+                f.write(new_lines)
 
 
-def check_ref_data(lines):
-    """Checks whether the file has a 'metadata' section"""
+def check_ref_sort(open_file):
+    """checks whether ref_sort altered the document"""
+    lines = open_file.readlines()
+    pos = 0
+    for line in lines:
+        if REF_SORT_TAG in line:
+            return lines, pos
+        pos += len(line)
+    return lines, None
 
-    # find metadata
-    metadata_line = None
-    for n, line in enumerate(lines):
-        if line.lower().replace(' ', '') == '###metadata':
-            metadata_line = n
+def write_ref(lines, entry, bibliography=None, ref_sort_line=None):
+    """Makes the string to write"""
 
-            print('yes metadata')
-            break
+    w_str = REF_SORT_TAG + '\n'
+    w_str += '## ' + entry['title']
+    w_str += '\n\n\n\n\n\n\n'
+    w_str += '##### Metadata\n\n'
+    for author in entry['author']:
+        w_str += f"[[phd/authors/{author}]]\n"
+    w_str += f"\n[[phd/publishers/{entry['publisher']}]]\n\n"
+    w_str += f"#date_{entry['date']}\n"
+    w_str += f"#text_{entry['type']}\n"
+
+    if bibliography is not None:
+        w_str += '\n\n\n'
+        w_str += '##### Bibliography\n\n'
+        for item in bibliography:
+            w_str += f"[[{item}]]\n"
+    return w_str
+
+def make_bibliography(entries):
+    """makes bibliography from entries"""
+    bibliography = []
+    for entry in entries:
+        bibliography.append(entry['filename'])
+    return bibliography
+
     
-    if metadata_line:
-        for line in lines[n:]:
-            print(line)
-            pass
-
-
-
 # getting entries ------------------------------------------
 def bib_entries(bib_file):
     """returns a list of dictionary bib entries"""
@@ -126,7 +165,7 @@ def make_filename(entry):
     title = entry['title'].replace(':', ',')
     date = f"({entry['date']}) - "
 
-    filename = author + date + title + '.md'
+    filename = author + date + title
     return filename
 
 
@@ -142,7 +181,7 @@ def determine_entry(lines, line_n):
         if bracket_counter == 0:
             return temp
     
-    print('mismatched brackets')
+    assert bracket_counter == 0, "mismatched brackets"
     return None
 
 def find_entries(lines):
@@ -153,87 +192,6 @@ def find_entries(lines):
             entry_lines.append(n)
     return entry_lines
 
-
-
-# ==============================
-
-
-def extract_refs(ref_file):
-    # ref dict sample
-    refs = []
-    ref_d = {'title'     : '',
-             'authors'   : [],
-             'date'      : '',
-             'publisher' : ''}
-
-    # read refs
-    with open(ref_file, 'r') as f:
-        for n, line in enumerate(f):
-
-            # new entry
-            t_str = 'Title:'
-            if line[:len(t_str)] == t_str:
-                refs.append(ref_d.copy())
-                refs[-1]['authors'] = []
-                refs[-1]['title'] = line[len(t_str)+1:].rstrip('\n')
-            
-            # authors
-            a_str = 'Author:'
-            if line[:len(a_str)] == a_str:
-                refs[-1]['authors'].append(line[len(a_str)+1:].rstrip('\n'))
-
-            # date
-            d_str = 'Publication date:'
-            if line[:len(d_str)] == d_str:
-                refs[-1]['date'] = line[len(d_str)+1:].rstrip('\n')
-            
-            # publisher
-            p_str = 'Journal title:'
-            if line[:len(p_str)] == p_str:
-                refs[-1]['publisher'] = line[len(p_str)+1:].rstrip('\n')
-    
-    # print test 
-    if False:
-        for x in refs:
-            print(f"title    : {x['title']}")
-            print(f"date     : {x['date']}")
-            print(f"publisher: {x['publisher']}")
-            for y in x['authors']:
-                print(f"author   : {y}")
-            print()
-
-    return refs
-
-def write_refs(references, output_dir):
-    # write references
-    for ref in references:
-        # make title
-        author_str = ref['authors'][0].split()
-        author_str.sort(key=len, reverse=True)
-        author_str = author_str[0].rstrip(',.') + ' '
-        # print(author_str)
-        date_str = f"({ref['date']}) - "
-        et_al = ('et al. ' if len(ref['authors']) > 1 else '')
-        title = author_str + et_al + date_str + ref['title']
-
-        # add info
-        with open(output_dir + title + '.md', 'w') as f:
-            write_str = f"# {ref['title']}\n\n\n\n\n\n\n\n"
-            write_str += f"[[date:{ref['date']}]]\n"
-            for author in ref['authors']:
-                write_str += f"[[author:{author}]]\n"
-            write_str += f"[[publishery:{ref['publisher']}]]\n"
-
-            f.write(write_str)
-    
-    # add file with all references
-    with open(output_dir + '---original_paper---' + '.md', 'w') as f:
-        write_str = '# ___\n\n\n[[date:]]\n[[author:]]\n[[publisher:]]\n\n\n\n\n\n\n\n### References\n'
-        for ref in references:
-            write_str += '- [[' + ref['title'] + ']]\n'
-        f.write(write_str)
-
-
-
+# ------------------------------------------------
 if __name__ == "__main__":
     main()
