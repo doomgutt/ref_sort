@@ -1,9 +1,9 @@
 from pathlib import Path
-from tkinter import N, Y
 
 ROOT_DIR = Path('.')
 REF_SORT_TAG = '#---ref-sort---------------------'
-#
+# === === === === ===
+
 
 
 def main():
@@ -11,7 +11,7 @@ def main():
 
 # ----------------------------------------------------------
 def ref_sort():
-    """ asdf"""
+    """ref_sort"""
     bib_dir = ROOT_DIR / 'bibs'
     output_dir = ROOT_DIR / 'output'
     for bib_file in bib_dir.glob('*.bib'):
@@ -33,29 +33,24 @@ def make_ref_files(entries, output_dir):
         # if there is a file, look for it
         if filepath.exists() and filepath.is_file():
             with filepath.open('r+') as f:
-                print(f.tell())
                 
                 # check if ref_sort already altered the file
-                lines, pos = check_ref_sort(f)
-                print(pos)
+                pos = check_ref_sort(f)
                 if pos == None:
                     f.seek(0, 2)
-                    new_lines = write_ref(lines, entry, bibliography)
-                    f.write(new_lines)
+                    f.write(write_ref(entry, bibliography))
                     f.truncate()
                 else:
                     # ask permission to rewrite
                     answer = input(f"Rewrite ref_sort data for: \n{entry['filename']}?\n y/n? ")
                     if answer.lower() in ["y","yes"]:
-                        new_lines = write_ref(lines, entry, bibliography)
                         f.seek(pos)
-                        f.write(new_lines)
+                        f.write(write_ref(entry, bibliography))
                         f.truncate()
         # make new file if no file
         else:
             with filepath.open('w') as f:
-                new_lines = write_ref(lines, entry, bibliography)
-                f.write(new_lines)
+                f.write(write_ref(entry, bibliography))
 
 
 def check_ref_sort(open_file):
@@ -64,11 +59,11 @@ def check_ref_sort(open_file):
     pos = 0
     for line in lines:
         if REF_SORT_TAG in line:
-            return lines, pos
+            return pos
         pos += len(line)
-    return lines, None
+    return None
 
-def write_ref(lines, entry, bibliography=None, ref_sort_line=None):
+def write_ref(entry, bibliography=None):
     """Makes the string to write"""
 
     w_str = REF_SORT_TAG + '\n'
