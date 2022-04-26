@@ -10,7 +10,7 @@ def main():
     clean_all()
 
 def clean_all():
-    bib_dir = ROOT_DIR / 'bibs_md'
+    bib_dir = ROOT_DIR / 'clean_anystyle_bibs'
     for bib_file in bib_dir.glob('*.md'):
         with bib_file.open('r+') as f:
             count_entries(f)
@@ -64,18 +64,19 @@ def make_check_str():
     return itemize
 
 def prefix_postfix(lines):
+    """determine brackets for enumeration"""
     global PREFIX, POSTFIX
-    if lines[0][0] == '[' and lines[0][2] == ']':
-        PREFIX = '['
-        POSTFIX = ']'
-    elif lines[0][1] == '.':
-        PREFIX = ''
-        POSTFIX = '.'
-    else:
-        PREFIX = None
-        POSTFIX = None
+    one = lines[0].split()[0]
+    pref_post = one.replace('1', ' ').split()
+    if len(pref_post) == 1:
+        pref_post = [''] + pref_post
+    elif len(pref_post) == 0:
+        pref_post = ['', '']
+    PREFIX = pref_post[0]
+    POSTFIX = pref_post[1]
 
 def count_entries(f):
+    """try to count number of entries"""
     global EXPECTED_N
     lines = f.readlines()
     prefix_postfix(lines)
@@ -83,12 +84,10 @@ def count_entries(f):
     c = 1
     for line in lines:
         check_char = PREFIX + str(c) + POSTFIX + ' '
-        print(check_char)
         if line[:len(check_char)] == check_char:
             c += 1
 
     EXPECTED_N = c-1
-
 
 if __name__ == '__main__':
     main()
