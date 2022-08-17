@@ -1,8 +1,8 @@
 ## Intention
 
-I was thinking it would be interesting to be able to pull references from bibliography of a paper and create maps out of them.
+I was thinking it would be interesting to be able to pull references from bibliography of a paper and create maps out of them. The idea has sort of been implemented by [ResearchRabbit](https://www.researchrabbit.ai/) and [Connected Papers](https://www.connectedpapers.com/), but I felt it wasn't quite what I was looking for.
 
-For most papers it seems that [citationchaser](https://estech.shinyapps.io/citationchaser/) does the job. For papers on arXiv and things that are harder to reach I use [Anystyle](https://anystyle.io) or [Cermine](http://cermine.ceon.pl/i).
+For most papers it seems that [citationchaser](https://estech.shinyapps.io/citationchaser/) does the job of pulling the information. For papers on arXiv and things that are harder to reach I use [Anystyle](https://anystyle.io) or [Cermine](http://cermine.ceon.pl/i).
 
 I transform these into markdown files to use with [Obsidian](https://obsidian.md) as I build up my collection of references.
 
