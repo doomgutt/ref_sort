@@ -11,14 +11,14 @@ Citationchaser already offers a network view, but it is only on the web, doesn't
 --------------------
 ## How to use
 
-texts
-├── paper1_citationchaser
-│  ├── self.ris
-│  ├── refs.ris
-│  └── cits.ris
-└── paper2_anystyle
-   ├── self.bib
-   └── refs.bib
+texts  
+├── paper1_citationchaser  
+│  ├── self.ris  
+│  ├── refs.ris  
+│  └── cits.ris  
+└── paper2_anystyle  
+   ├── self.bib  
+   └── refs.bib  
 
 In the texts folder, make a folder for each bibliography item you want to use/include.
 
